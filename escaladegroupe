@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évaluation Escalade - Fiche de Séance EPS</title>
+    <!-- Chargement de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Police Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        /* Transition fluide pour l'accordéon du barème */
+        .accordion-content {
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            overflow: hidden;
+        }
+        /* Personnalisation subtile des sélecteurs pour tactile */
+        select, input[type="text"] {
+            min-height: 44px;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- En-tête de l'application -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-orange-500 p-2.5 rounded-xl shadow-md">
+                    <!-- Icône Montagne / Escalade SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 20h18L14 6l-4 7-3-4-4 11z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Fiche d'Évaluation Escalade</h1>
+                    <p class="text-xs sm:text-sm text-slate-300">Calculateur de points, bonus TOP & sécurité</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button type="button" id="toggleBaremeBtn" onclick="toggleBareme()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-600 px-3.5 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span id="toggleBaremeText">Afficher le barème</span>
+                </button>
+                <button type="button" onclick="openResetModal()" class="flex items-center gap-1.5 bg-slate-800 hover:bg-red-900/60 text-slate-300 hover:text-red-200 border border-slate-700 px-3 py-2 rounded-xl text-sm font-medium transition cursor-pointer" title="Réinitialiser la fiche">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span class="hidden md:inline">Réinitialiser</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteneur principal -->
+    <main class="max-w-6xl mx-auto px-4 pt-6 space-y-8">
+
+        <!-- Zone Notification Toast (remplace alert()) -->
+        <div id="toastNotification" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300 max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3">
+            <span id="toastIcon" class="text-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </span>
+            <p id="toastMessage" class="text-sm font-medium"></p>
+        </div>
+
+        <!-- Accordéon : Tableau du Barème des 13 Voies -->
+        <section id="baremeSection" class="hidden bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+            <div class="bg-slate-800 text-white px-5 py-3.5 flex items-center justify-between">
+                <h2 class="font-bold text-base flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+                    Barème officiel des voies d’escalade (Points par hauteur atteinte)
+                </h2>
+                <button type="button" onclick="toggleBareme()" class="text-slate-300 hover:text-white text-sm font-medium px-2 py-1 rounded-lg hover:bg-slate-700 cursor-pointer">
+                    Fermer ✕
+                </button>
+            </div>
+            <div class="p-4 overflow-x-auto">
+                <table class="w-full text-sm text-center border-collapse min-w-[780px]">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 font-bold border-b-2 border-slate-300">
+                            <th class="py-2.5 px-3 text-left border border-slate-200 bg-slate-200/70">Hauteur / Voie</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 1</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 2</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 3</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 4</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 5</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 6</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 7</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 8</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 9</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 10</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 11</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 12</th>
+                            <th class="py-2.5 px-2 border border-slate-200">Voie 13</th>
+                        </tr>
+                    </thead>
+                    <tbody id="baremeTableBody" class="divide-y divide-slate-200">
+                        <!-- Rempli dynamiquement par JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ÉTAPE 1 : CONFIGURATION DU GROUPE -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+            <div class="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500 text-white font-bold text-sm shadow-sm">1</span>
+                <h2 class="text-lg sm:text-xl font-bold text-slate-800">Composition du groupe</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                <!-- Sélecteur nombre de personnes -->
+                <div class="md:col-span-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label for="groupSizeSelect" class="block text-sm font-semibold text-slate-700 mb-2">
+                        Combien de personnes compose votre groupe ?
+                    </label>
+                    <select id="groupSizeSelect" onchange="handleGroupSizeChange()" class="w-full rounded-xl border-slate-300 bg-white px-3.5 py-2.5 text-slate-900 font-semibold shadow-sm border focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none cursor-pointer">
+                        <option value="3" selected>3 personnes</option>
+                        <option value="4">4 personnes</option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-2">
+                        Les tableaux suivants s'adaptent automatiquement au nombre de grimpeurs sélectionné.
+                    </p>
+                </div>
+
+                <!-- Saisie des prénoms -->
+                <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="climberName1" class="block text-sm font-semibold text-slate-700 mb-1">Grimpeur 1 :</label>
+                        <input type="text" id="climberName1" placeholder="Prénom à inscrire" oninput="handleNameChange(0, this.value)" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition">
+                    </div>
+                    <div>
+                        <label for="climberName2" class="block text-sm font-semibold text-slate-700 mb-1">Grimpeur 2 :</label>
+                        <input type="text" id="climberName2" placeholder="Prénom à inscrire" oninput="handleNameChange(1, this.value)" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition">
+                    </div>
+                    <div>
+                        <label for="climberName3" class="block text-sm font-semibold text-slate-700 mb-1">Grimpeur 3 :</label>
+                        <input type="text" id="climberName3" placeholder="Prénom à inscrire" oninput="handleNameChange(2, this.value)" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition">
+                    </div>
+                    <div id="climber4Container" class="hidden">
+                        <label for="climberName4" class="block text-sm font-semibold text-slate-700 mb-1">Grimpeur 4 :</label>
+                        <input type="text" id="climberName4" placeholder="Prénom à inscrire" oninput="handleNameChange(3, this.value)" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ÉTAPE 2 : SAISIE DES 3 VOIES -->
+        <section class="space-y-6">
+            <div class="flex items-center gap-3 px-1">
+                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500 text-white font-bold text-sm shadow-sm">2</span>
+                <div>
+                    <h2 class="text-lg sm:text-xl font-bold text-slate-800">Réalisations sur les 3 voies</h2>
+                    <p class="text-xs sm:text-sm text-slate-500">Sélectionnez la voie choisie, la hauteur atteinte par chaque grimpeur et validez le bonus TOP collectif.</p>
+                </div>
+            </div>
+
+            <!-- Conteneur où les 3 blocs de voies seront générés -->
+            <div id="routesContainer" class="space-y-6"></div>
+        </section>
+
+        <!-- ÉTAPE 3 : FAUTES DE SÉCURITÉ & BILAN DE LA SÉANCE -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+            <div class="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500 text-white font-bold text-sm shadow-sm">3</span>
+                <h2 class="text-lg sm:text-xl font-bold text-slate-800">Sécurité & Bilan intermédiaire</h2>
+            </div>
+
+            <!-- Question fautes sécurité -->
+            <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <label for="safetyFaultsSelect" class="block text-base font-bold text-slate-800">
+                        Nombre de fautes sécurité du groupe :
+                    </label>
+                    <p class="text-sm text-amber-800 mt-0.5">
+                        Attention : chaque faute de sécurité équivaut à <strong>3 points de pénalité</strong>.
+                    </p>
+                </div>
+                <div class="w-full sm:w-48">
+                    <select id="safetyFaultsSelect" onchange="handleSafetyFaultsChange(this.value)" class="w-full rounded-xl border-amber-300 bg-white px-4 py-2.5 text-slate-900 font-bold text-center shadow-sm border focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none cursor-pointer">
+                        <option value="0" selected>0 faute (0 pt)</option>
+                        <option value="1">1 faute (-3 pts)</option>
+                        <option value="2">2 fautes (-6 pts)</option>
+                        <option value="3">3 fautes (-9 pts)</option>
+                        <option value="4">4 fautes (-12 pts)</option>
+                        <option value="5">5 fautes (-15 pts)</option>
+                        <option value="6">6 fautes (-18 pts)</option>
+                        <option value="7">7 fautes (-21 pts)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tableau intermédiaire demandé dans le document -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-sm text-center border-collapse min-w-[600px]">
+                    <thead>
+                        <tr class="bg-slate-800 text-white font-semibold">
+                            <th class="py-3 px-4 border-r border-slate-700">Total Points 1ère Voie</th>
+                            <th class="py-3 px-4 border-r border-slate-700">Total Points 2ème Voie</th>
+                            <th class="py-3 px-4 border-r border-slate-700">Total Points 3ème Voie</th>
+                            <th class="py-3 px-4 border-r border-slate-700 bg-red-950/60 text-red-200">Points pénalités</th>
+                            <th class="py-3 px-4 bg-orange-600 text-white font-bold">Nombre total de points sur la séance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white text-base sm:text-lg font-bold text-slate-800">
+                            <td id="summaryRoute1Total" class="py-4 px-4 border-r border-slate-200">0</td>
+                            <td id="summaryRoute2Total" class="py-4 px-4 border-r border-slate-200">0</td>
+                            <td id="summaryRoute3Total" class="py-4 px-4 border-r border-slate-200">0</td>
+                            <td id="summaryPenalties" class="py-4 px-4 border-r border-slate-200 text-red-600 bg-red-50/40">0</td>
+                            <td id="summaryGrandTotal" class="py-4 px-4 text-xl sm:text-2xl font-extrabold text-orange-600 bg-orange-50/60">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ÉTAPE 4 : TABLEAU DES RÉSULTATS FINAUX & ENVOI PAR MAIL -->
+        <section class="bg-white rounded-2xl shadow-md border border-slate-200 p-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm shadow-sm">4</span>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-bold text-slate-800">Tableau récapitulatif final & Envoi</h2>
+                        <p class="text-xs sm:text-sm text-slate-500">Vous pouvez envoyer vos résultats même si toutes les voies n'ont pas été remplies.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau final respectant strictement la structure du document -->
+            <div class="overflow-x-auto rounded-xl border border-slate-300 shadow-inner mb-6">
+                <table class="w-full text-xs sm:text-sm text-center border-collapse min-w-[820px]">
+                    <thead>
+                        <!-- Ligne 1 des en-têtes -->
+                        <tr class="bg-slate-800 text-white font-bold">
+                            <th rowspan="2" class="py-3 px-3 border border-slate-600 bg-slate-900 min-w-[130px]">Grimpeur</th>
+                            <th colspan="2" id="finalHeaderRoute1" class="py-2.5 px-3 border border-slate-600 bg-slate-800">Voie N° —</th>
+                            <th colspan="2" id="finalHeaderRoute2" class="py-2.5 px-3 border border-slate-600 bg-slate-800">Voie N° —</th>
+                            <th colspan="2" id="finalHeaderRoute3" class="py-2.5 px-3 border border-slate-600 bg-slate-800">Voie N° —</th>
+                            <th rowspan="2" class="py-3 px-3 border border-slate-600 bg-red-950/70 text-red-200 w-28">Points pénalités</th>
+                            <th rowspan="2" class="py-3 px-3 border border-slate-600 bg-orange-600 text-white w-36">Nombre total de points sur la séance</th>
+                        </tr>
+                        <!-- Ligne 2 des en-têtes -->
+                        <tr class="bg-slate-700 text-slate-100 font-semibold text-xs">
+                            <th class="py-2 px-2 border border-slate-600">Hauteur Atteinte</th>
+                            <th class="py-2 px-2 border border-slate-600">Points 1ère Voie</th>
+                            <th class="py-2 px-2 border border-slate-600">Hauteur Atteinte</th>
+                            <th class="py-2 px-2 border border-slate-600">Points 2ème Voie</th>
+                            <th class="py-2 px-2 border border-slate-600">Hauteur Atteinte</th>
+                            <th class="py-2 px-2 border border-slate-600">Points 3ème Voie</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finalResultsTableBody" class="divide-y divide-slate-200 bg-white">
+                        <!-- Généré dynamiquement selon le groupe (3 ou 4 grimpeurs) + ligne Total Voie -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Boutons d'action -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="copyResultsToClipboard()" class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-semibold px-5 py-3.5 rounded-xl transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    <span>Copier le récapitulatif</span>
+                </button>
+
+                <button type="button" onclick="sendResultsByEmail()" class="flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-emerald-600/20 transition cursor-pointer text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span>Envoyer les résultats</span>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 text-right mt-2">
+                Destinataire configuré : <span class="font-mono text-slate-600">romain.griot@gmail.com</span>
+            </p>
+        </section>
+
+    </main>
+
+    <!-- Modale de confirmation de réinitialisation (remplace confirm()) -->
+    <div id="resetModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Réinitialiser la fiche ?</h3>
+            <p class="text-sm text-slate-600 mb-6">
+                Toutes les données saisies (prénoms, voies choisies, hauteurs atteintes et fautes de sécurité) seront effacées.
+            </p>
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm cursor-pointer">
+                    Annuler
+                </button>
+                <button type="button" onclick="confirmReset()" class="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm cursor-pointer">
+                    Oui, tout effacer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * DONNÉES DE RÉFÉRENCE : Barème exact des 13 voies d'escalade
+         */
+        const HEIGHT_LEVELS = [
+            "1er Spitz",
+            "2ème Spitz",
+            "3ème Spitz",
+            "4ème Spitz",
+            "TOP"
+        ];
+
+        const SCORING_TABLE = {
+            1:  { "1er Spitz": 3,   "2ème Spitz": 3.5, "3ème Spitz": 4,   "4ème Spitz": 4.5, "TOP": 5 },
+            2:  { "1er Spitz": 3,   "2ème Spitz": 4,   "3ème Spitz": 5,   "4ème Spitz": 6,   "TOP": 7 },
+            3:  { "1er Spitz": 3,   "2ème Spitz": 3.5, "3ème Spitz": 4,   "4ème Spitz": 4.5, "TOP": 5 },
+            4:  { "1er Spitz": 3,   "2ème Spitz": 4,   "3ème Spitz": 5,   "4ème Spitz": 6,   "TOP": 7 },
+            5:  { "1er Spitz": 3,   "2ème Spitz": 4,   "3ème Spitz": 5,   "4ème Spitz": 6,   "TOP": 7 },
+            6:  { "1er Spitz": 3,   "2ème Spitz": 3.5, "3ème Spitz": 4,   "4ème Spitz": 4.5, "TOP": 5 },
+            7:  { "1er Spitz": 4,   "2ème Spitz": 5,   "3ème Spitz": 6,   "4ème Spitz": 7,   "TOP": 8 },
+            8:  { "1er Spitz": 3,   "2ème Spitz": 3.5, "3ème Spitz": 4,   "4ème Spitz": 4.5, "TOP": 5 },
+            9:  { "1er Spitz": 4,   "2ème Spitz": 5,   "3ème Spitz": 6,   "4ème Spitz": 7,   "TOP": 8 },
+            10: { "1er Spitz": 3,   "2ème Spitz": 5,   "3ème Spitz": 6.5, "4ème Spitz": 8,   "TOP": 10 },
+            11: { "1er Spitz": 3,   "2ème Spitz": 5,   "3ème Spitz": 6.5, "4ème Spitz": 8,   "TOP": 10 },
+            12: { "1er Spitz": 4,   "2ème Spitz": 5,   "3ème Spitz": 6,   "4ème Spitz": 7,   "TOP": 9 },
+            13: { "1er Spitz": 4,   "2ème Spitz": 5,   "3ème Spitz": 6,   "4ème Spitz": 7,   "TOP": 9 }
+        };
+
+        const ROUTE_LABELS = [
+            { index: 0, title: "1ère Voie", totalLabel: "TOTAL 1ère Voie" },
+            { index: 1, title: "2ème Voie", totalLabel: "TOTAL 2ème Voie" },
+            { index: 2, title: "3ème Voie", totalLabel: "TOTAL 3ème Voie" }
+        ];
+
+        /**
+         * ÉTAT DE L'APPLICATION
+         */
+        let appState = {
+            groupSize: 3,
+            climbers: ["", "", "", ""],
+            routes: [
+                { routeNumber: "", heights: ["", "", "", ""], allTopBonus: "NON" },
+                { routeNumber: "", heights: ["", "", "", ""], allTopBonus: "NON" },
+                { routeNumber: "", heights: ["", "", "", ""], allTopBonus: "NON" }
+            ],
+            safetyFaults: 0
+        };
+
+        /**
+         * Formate un nombre avec une virgule décimale (usage français)
+         */
+        function formatNumberFR(num) {
+            if (num === null || num === undefined || isNaN(num)) return "0";
+            return Number.isInteger(num) ? num.toString() : num.toString().replace('.', ',');
+        }
+
+        /**
+         * Retourne le nom affiché d'un grimpeur (Prénom ou "Grimpeur X")
+         */
+        function getClimberDisplayName(index) {
+            const raw = appState.climbers[index]?.trim();
+            return raw ? raw : `Grimpeur ${index + 1}`;
+        }
+
+        /**
+         * Calcule les points d'un grimpeur pour une voie donnée
+         */
+        function getClimberPoints(routeIdx, climberIdx) {
+            const route = appState.routes[routeIdx];
+            const routeNum = parseInt(route.routeNumber, 10);
+            const height = route.heights[climberIdx];
+
+            if (!routeNum || !height || !SCORING_TABLE[routeNum] || SCORING_TABLE[routeNum][height] === undefined) {
+                return 0;
+            }
+            return SCORING_TABLE[routeNum][height];
+        }
+
+        /**
+         * Calcule le total d'une voie (somme des grimpeurs actifs + 10 si bonus OUI)
+         */
+        function getRouteTotal(routeIdx) {
+            const route = appState.routes[routeIdx];
+            let sum = 0;
+            for (let i = 0; i < appState.groupSize; i++) {
+                sum += getClimberPoints(routeIdx, i);
+            }
+            if (route.allTopBonus === "OUI") {
+                sum += 10;
+            }
+            return sum;
+        }
+
+        /**
+         * Génère le tableau de référence du barème dans l'accordéon
+         */
+        function renderBaremeTable() {
+            const tbody = document.getElementById("baremeTableBody");
+            tbody.innerHTML = "";
+
+            HEIGHT_LEVELS.forEach(level => {
+                const tr = document.createElement("tr");
+                const isTop = level === "TOP";
+                tr.className = isTop ? "bg-emerald-50/70 font-bold text-emerald-900" : "hover:bg-slate-50";
+
+                let rowHtml = `<td class="py-2 px-3 text-left font-semibold border border-slate-200 ${isTop ? 'text-emerald-800' : 'text-slate-700'}">${level}</td>`;
+                for (let v = 1; v <= 13; v++) {
+                    const val = SCORING_TABLE[v][level];
+                    rowHtml += `<td class="py-2 px-2 border border-slate-200">${formatNumberFR(val)}</td>`;
+                }
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
+            });
+        }
+
+        /**
+         * Génère les 3 cartes de voies (1ère Voie, 2ème Voie, 3ème Voie)
+         */
+        function renderRoutesUI() {
+            const container = document.getElementById("routesContainer");
+            container.innerHTML = "";
+
+            ROUTE_LABELS.forEach((meta, rIdx) => {
+                const routeData = appState.routes[rIdx];
+                const routeTotal = getRouteTotal(rIdx);
+
+                // Options du sélecteur de voie (Voie 1 à Voie 13)
+                let routeOptionsHtml = `<option value="">-- Choisir une voie --</option>`;
+                for (let v = 1; v <= 13; v++) {
+                    const selected = parseInt(routeData.routeNumber, 10) === v ? "selected" : "";
+                    routeOptionsHtml += `<option value="${v}" ${selected}>Voie ${v}</option>`;
+                }
+
+                // Lignes du tableau des grimpeurs
+                let rowsHtml = "";
+                for (let cIdx = 0; cIdx < appState.groupSize; cIdx++) {
+                    const climberName = getClimberDisplayName(cIdx);
+                    const currentHeight = routeData.heights[cIdx];
+                    const pts = getClimberPoints(rIdx, cIdx);
+                    const hasSelection = routeData.routeNumber !== "" && currentHeight !== "";
+
+                    let heightOptions = `<option value="">-- Hauteur atteinte --</option>`;
+                    HEIGHT_LEVELS.forEach(lvl => {
+                        const sel = currentHeight === lvl ? "selected" : "";
+                        heightOptions += `<option value="${lvl}" ${sel}>${lvl}</option>`;
+                    });
+
+                    rowsHtml += `
+                        <tr class="border-b border-slate-200 last:border-b-0 hover:bg-slate-50/70 transition">
+                            <td class="py-3 px-4 font-semibold text-slate-800 bg-slate-50/50 border-r border-slate-200 text-left">
+                                ${escapeHtml(climberName)}
+                            </td>
+                            <td class="py-2.5 px-3 border-r border-slate-200">
+                                <select onchange="handleHeightChange(${rIdx}, ${cIdx}, this.value)" class="w-full rounded-lg border ${currentHeight === 'TOP' ? 'border-emerald-400 bg-emerald-50/60 text-emerald-900 font-semibold' : 'border-slate-300 bg-white text-slate-800'} px-3 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none cursor-pointer">
+                                    ${heightOptions}
+                                </select>
+                            </td>
+                            <td id="route_${rIdx}_climber_${cIdx}_pts" class="py-3 px-4 font-bold text-base border-r border-slate-200 ${hasSelection ? 'text-slate-900' : 'text-slate-400'}">
+                                ${hasSelection ? formatNumberFR(pts) : '0'}
+                            </td>
+                            ${cIdx === 0 ? `
+                                <td rowspan="${appState.groupSize}" id="route_${rIdx}_total_cell" class="py-4 px-4 bg-orange-50/50 text-center align-middle">
+                                    <div class="text-2xl font-extrabold text-orange-600">${formatNumberFR(routeTotal)}</div>
+                                    <div class="text-[11px] font-medium text-slate-500 mt-1">
+                                        ${routeData.allTopBonus === 'OUI' ? '(+10 pts bonus TOP)' : 'points'}
+                                    </div>
+                                </td>
+                            ` : ''}
+                        </tr>
+                    `;
+                }
+
+                const card = document.createElement("div");
+                card.className = "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden";
+                card.innerHTML = `
+                    <!-- En-tête de la carte Voie -->
+                    <div class="bg-slate-800 text-white px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="bg-orange-500 text-white text-xs font-extrabold uppercase px-2.5 py-1 rounded-lg tracking-wider">
+                                ${meta.title}
+                            </span>
+                            <h3 class="font-bold text-base sm:text-lg">Quelle voie a été choisie ?</h3>
+                        </div>
+                        <div class="w-full sm:w-56">
+                            <select onchange="handleRouteSelectChange(${rIdx}, this.value)" class="w-full rounded-xl bg-white text-slate-900 font-bold px-3.5 py-2 text-sm border-2 border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300 cursor-pointer">
+                                ${routeOptionsHtml}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tableau de saisie des hauteurs -->
+                    <div class="p-4 sm:p-5">
+                        ${!routeData.routeNumber ? `
+                            <div class="mb-3 px-3.5 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs sm:text-sm flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Sélectionnez d'abord le numéro de la voie ci-dessus pour que les points se calculent automatiquement.</span>
+                            </div>
+                        ` : ''}
+
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-sm text-center border-collapse min-w-[540px]">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                                        <th class="py-3 px-4 text-left border-r border-slate-200 w-1/4">${meta.title}</th>
+                                        <th class="py-3 px-4 border-r border-slate-200 w-1/3">Hauteur atteinte</th>
+                                        <th class="py-3 px-4 border-r border-slate-200 w-1/5">Points obtenus</th>
+                                        <th class="py-3 px-4 bg-orange-100/70 text-orange-900 w-1/5">${meta.totalLabel}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Question Bonus TOP collectif -->
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 px-4 py-3 rounded-xl border border-slate-200/80">
+                            <div>
+                                <label for="topBonusSelect_${rIdx}" class="block text-sm font-bold text-slate-800">
+                                    Est-ce que tous les grimpeurs sont arrivés au TOP ?
+                                </label>
+                                <span class="text-xs text-slate-500">Si OUI, un bonus collectif de <strong>+10 points</strong> est ajouté au total de la voie.</span>
+                            </div>
+                            <div class="w-full sm:w-44">
+                                <select id="topBonusSelect_${rIdx}" onchange="handleTopBonusChange(${rIdx}, this.value)" class="w-full rounded-xl border ${routeData.allTopBonus === 'OUI' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-white text-slate-800'} font-bold px-3.5 py-2 text-sm focus:border-orange-500 outline-none cursor-pointer">
+                                    <option value="NON" ${routeData.allTopBonus === "NON" ? "selected" : ""}>NON</option>
+                                    <option value="OUI" ${routeData.allTopBonus === "OUI" ? "selected" : ""}>OUI (+10 pts)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /**
+         * Met à jour les totaux intermédiaires et le grand tableau final
+         */
+        function updateSummariesAndFinalTable() {
+            const total1 = getRouteTotal(0);
+            const total2 = getRouteTotal(1);
+            const total3 = getRouteTotal(2);
+            const penalties = appState.safetyFaults * 3;
+            const grandTotal = (total1 + total2 + total3) - penalties;
+
+            // Mise à jour tableau intermédiaire (Étape 3)
+            document.getElementById("summaryRoute1Total").textContent = formatNumberFR(total1);
+            document.getElementById("summaryRoute2Total").textContent = formatNumberFR(total2);
+            document.getElementById("summaryRoute3Total").textContent = formatNumberFR(total3);
+            document.getElementById("summaryPenalties").textContent = penalties > 0 ? `-${formatNumberFR(penalties)}` : "0";
+            document.getElementById("summaryGrandTotal").textContent = formatNumberFR(grandTotal);
+
+            // Mise à jour en-têtes du tableau final (Étape 4)
+            document.getElementById("finalHeaderRoute1").textContent = appState.routes[0].routeNumber ? `Voie N° ${appState.routes[0].routeNumber}` : "Voie N° —";
+            document.getElementById("finalHeaderRoute2").textContent = appState.routes[1].routeNumber ? `Voie N° ${appState.routes[1].routeNumber}` : "Voie N° —";
+            document.getElementById("finalHeaderRoute3").textContent = appState.routes[2].routeNumber ? `Voie N° ${appState.routes[2].routeNumber}` : "Voie N° —";
+
+            // Génération du corps du tableau final
+            const tbody = document.getElementById("finalResultsTableBody");
+            tbody.innerHTML = "";
+
+            const totalRowSpan = appState.groupSize + 1; // Grimpeurs + ligne "Total Voie"
+
+            for (let cIdx = 0; cIdx < appState.groupSize; cIdx++) {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50";
+
+                const name = escapeHtml(getClimberDisplayName(cIdx));
+
+                // Données Voie 1, 2, 3 pour ce grimpeur
+                let cellsHtml = `<td class="py-2.5 px-3 font-bold text-slate-800 text-left border border-slate-200 bg-slate-50">${name}</td>`;
+
+                for (let rIdx = 0; rIdx < 3; rIdx++) {
+                    const h = appState.routes[rIdx].heights[cIdx];
+                    const pts = getClimberPoints(rIdx, cIdx);
+                    const displayH = h ? h : "—";
+                    const displayPts = (appState.routes[rIdx].routeNumber && h) ? formatNumberFR(pts) : "0";
+
+                    cellsHtml += `
+                        <td class="py-2.5 px-2 border border-slate-200 ${h === 'TOP' ? 'text-emerald-700 font-semibold bg-emerald-50/40' : 'text-slate-700'}">${displayH}</td>
+                        <td class="py-2.5 px-2 border border-slate-200 font-semibold text-slate-900">${displayPts}</td>
+                    `;
+                }
+
+                // Colonnes fusionnées verticalement sur toute la hauteur du tableau final
+                if (cIdx === 0) {
+                    cellsHtml += `
+                        <td rowspan="${totalRowSpan}" class="py-3 px-3 border border-slate-200 bg-red-50/50 text-red-700 font-extrabold text-base align-middle">
+                            ${penalties > 0 ? `-${formatNumberFR(penalties)}` : '0'}
+                            <div class="text-[11px] font-normal text-red-600/80 mt-0.5">(${appState.safetyFaults} faute${appState.safetyFaults > 1 ? 's' : ''})</div>
+                        </td>
+                        <td rowspan="${totalRowSpan}" class="py-3 px-3 border border-slate-200 bg-orange-50/70 text-orange-600 font-extrabold text-xl align-middle">
+                            ${formatNumberFR(grandTotal)}
+                        </td>
+                    `;
+                }
+
+                tr.innerHTML = cellsHtml;
+                tbody.appendChild(tr);
+            }
+
+            // Dernière ligne : "Total Voie"
+            const totalRow = document.createElement("tr");
+            totalRow.className = "bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300";
+            totalRow.innerHTML = `
+                <td class="py-3 px-3 text-left border border-slate-200 bg-slate-200/80">Total Voie</td>
+                <td colspan="2" class="py-3 px-3 border border-slate-200 text-base text-slate-900">
+                    ${formatNumberFR(total1)} ${appState.routes[0].allTopBonus === 'OUI' ? '<span class="text-xs font-semibold text-emerald-700">(dont +10 TOP)</span>' : ''}
+                </td>
+                <td colspan="2" class="py-3 px-3 border border-slate-200 text-base text-slate-900">
+                    ${formatNumberFR(total2)} ${appState.routes[1].allTopBonus === 'OUI' ? '<span class="text-xs font-semibold text-emerald-700">(dont +10 TOP)</span>' : ''}
+                </td>
+                <td colspan="2" class="py-3 px-3 border border-slate-200 text-base text-slate-900">
+                    ${formatNumberFR(total3)} ${appState.routes[2].allTopBonus === 'OUI' ? '<span class="text-xs font-semibold text-emerald-700">(dont +10 TOP)</span>' : ''}
+                </td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        /**
+         * GESTIONNAIRES D'ÉVÉNEMENTS
+         */
+        function handleGroupSizeChange() {
+            const size = parseInt(document.getElementById("groupSizeSelect").value, 10);
+            appState.groupSize = size;
+
+            const climber4Div = document.getElementById("climber4Container");
+            if (size === 4) {
+                climber4Div.classList.remove("hidden");
+            } else {
+                climber4Div.classList.add("hidden");
+            }
+
+            // Vérifier le statut TOP automatique si besoin
+            for (let r = 0; r < 3; r++) {
+                checkAutoAllTop(r);
+            }
+
+            renderRoutesUI();
+            updateSummariesAndFinalTable();
+        }
+
+        function handleNameChange(climberIdx, value) {
+            appState.climbers[climberIdx] = value;
+            renderRoutesUI();
+            updateSummariesAndFinalTable();
+        }
+
+        function handleRouteSelectChange(routeIdx, value) {
+            appState.routes[routeIdx].routeNumber = value;
+            renderRoutesUI();
+            updateSummariesAndFinalTable();
+        }
+
+        function handleHeightChange(routeIdx, climberIdx, value) {
+            appState.routes[routeIdx].heights[climberIdx] = value;
+            checkAutoAllTop(routeIdx);
+            renderRoutesUI();
+            updateSummariesAndFinalTable();
+        }
+
+        /**
+         * Pré-sélectionne automatiquement OUI si tous les grimpeurs actifs sont au TOP
+         */
+        function checkAutoAllTop(routeIdx) {
+            const route = appState.routes[routeIdx];
+            let allTop = true;
+            for (let i = 0; i < appState.groupSize; i++) {
+                if (route.heights[i] !== "TOP") {
+                    allTop = false;
+                    break;
+                }
+            }
+            route.allTopBonus = allTop ? "OUI" : "NON";
+        }
+
+        function handleTopBonusChange(routeIdx, value) {
+            appState.routes[routeIdx].allTopBonus = value;
+            renderRoutesUI();
+            updateSummariesAndFinalTable();
+        }
+
+        function handleSafetyFaultsChange(value) {
+            appState.safetyFaults = parseInt(value, 10) || 0;
+            updateSummariesAndFinalTable();
+        }
+
+        /**
+         * Accordéon Barème
+         */
+        function toggleBareme() {
+            const section = document.getElementById("baremeSection");
+            const btnText = document.getElementById("toggleBaremeText");
+            const isHidden = section.classList.contains("hidden");
+
+            if (isHidden) {
+                section.classList.remove("hidden");
+                btnText.textContent = "Masquer le barème";
+            } else {
+                section.classList.add("hidden");
+                btnText.textContent = "Afficher le barème";
+            }
+        }
+
+        /**
+         * Génération du texte récapitulatif structuré pour l'email et le presse-papier
+         */
+        function buildResultsText() {
+            const names = [];
+            for (let i = 0; i < appState.groupSize; i++) {
+                names.push(getClimberDisplayName(i));
+            }
+
+            const total1 = getRouteTotal(0);
+            const total2 = getRouteTotal(1);
+            const total3 = getRouteTotal(2);
+            const penalties = appState.safetyFaults * 3;
+            const grandTotal = (total1 + total2 + total3) - penalties;
+
+            let lines = [];
+            lines.push("RÉSULTATS SÉANCE D'ESCALADE");
+            lines.push("========================================");
+            lines.push(`Groupe (${appState.groupSize} grimpeurs) : ${names.join(", ")}`);
+            lines.push("");
+
+            // Détail par voie
+            ROUTE_LABELS.forEach((meta, rIdx) => {
+                const r = appState.routes[rIdx];
+                const rNum = r.routeNumber ? `Voie N° ${r.routeNumber}` : "Non renseignée";
+                lines.push(`--- ${meta.title.toUpperCase()} (${rNum}) ---`);
+                for (let cIdx = 0; cIdx < appState.groupSize; cIdx++) {
+                    const cName = getClimberDisplayName(cIdx);
+                    const h = r.heights[cIdx] || "Non grimpée";
+                    const pts = (r.routeNumber && r.heights[cIdx]) ? formatNumberFR(getClimberPoints(rIdx, cIdx)) : "0";
+                    lines.push(`• ${cName} : ${h} -> ${pts} pt(s)`);
+                }
+                lines.push(`Tous au TOP (Bonus +10 pts) : ${r.allTopBonus}`);
+                lines.push(`=> ${meta.totalLabel} : ${formatNumberFR(getRouteTotal(rIdx))} points`);
+                lines.push("");
+            });
+
+            lines.push("--- BILAN SÉCURITÉ & SCORE FINAL ---");
+            lines.push(`• Total Points 1ère Voie : ${formatNumberFR(total1)}`);
+            lines.push(`• Total Points 2ème Voie : ${formatNumberFR(total2)}`);
+            lines.push(`• Total Points 3ème Voie : ${formatNumberFR(total3)}`);
+            lines.push(`• Fautes sécurité : ${appState.safetyFaults} faute(s) -> Points pénalités : ${penalties > 0 ? '-' + formatNumberFR(penalties) : '0'}`);
+            lines.push("========================================");
+            lines.push(`NOMBRE TOTAL DE POINTS SUR LA SÉANCE : ${formatNumberFR(grandTotal)} points`);
+
+            return {
+                subject: `Résultats Escalade - Groupe : ${names.join(", ")}`,
+                body: lines.join("\n")
+            };
+        }
+
+        /**
+         * Envoi des résultats par mail à romain.griot@gmail.com
+         */
+        function sendResultsByEmail() {
+            const { subject, body } = buildResultsText();
+            const recipient = "romain.griot@gmail.com";
+            const mailtoUrl = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+            showToast("Ouverture de votre messagerie pour envoyer les résultats...");
+            window.location.href = mailtoUrl;
+        }
+
+        /**
+         * Copie le récapitulatif dans le presse-papier (alternative pratique sur tablette/ENT)
+         */
+        function copyResultsToClipboard() {
+            const { subject, body } = buildResultsText();
+            const fullText = `À : romain.griot@gmail.com\nObjet : ${subject}\n\n${body}`;
+
+            const tempTextarea = document.createElement("textarea");
+            tempTextarea.value = fullText;
+            tempTextarea.style.position = "fixed";
+            tempTextarea.style.left = "-9999px";
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+
+            try {
+                document.execCommand("copy");
+                showToast("Récapitulatif copié ! Vous pouvez le coller dans votre mail.");
+            } catch (err) {
+                showToast("Impossible de copier automatiquement.");
+            } finally {
+                document.body.removeChild(tempTextarea);
+            }
+        }
+
+        /**
+         * Modale et logique de réinitialisation
+         */
+        function openResetModal() {
+            document.getElementById("resetModal").classList.remove("hidden");
+        }
+
+        function closeResetModal() {
+            document.getElementById("resetModal").classList.add("hidden");
+        }
+
+        function confirmReset() {
+            appState = {
+                groupSize: 3,
+                climbers: ["", "", "", ""],
+                routes: [
+                    { routeNumber: "", heights: ["", "", "", ""], allTopBonus: "NON" },
+                    { routeNumber: "", heights: ["", "", "", ""], allTopBonus: "NON" },
+                    { routeNumber: "", heights: ["", "", "", ""], allTopBonus: "NON" }
+                ],
+                safetyFaults: 0
+            };
+
+            document.getElementById("groupSizeSelect").value = "3";
+            document.getElementById("climber4Container").classList.add("hidden");
+            document.getElementById("climberName1").value = "";
+            document.getElementById("climberName2").value = "";
+            document.getElementById("climberName3").value = "";
+            document.getElementById("climberName4").value = "";
+            document.getElementById("safetyFaultsSelect").value = "0";
+
+            closeResetModal();
+            renderRoutesUI();
+            updateSummariesAndFinalTable();
+            showToast("La fiche a été réinitialisée.");
+        }
+
+        /**
+         * Notification visuelle non-bloquante
+         */
+        let toastTimeout = null;
+        function showToast(message) {
+            const toast = document.getElementById("toastNotification");
+            const msgEl = document.getElementById("toastMessage");
+            msgEl.textContent = message;
+            toast.classList.remove("hidden");
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add("hidden");
+            }, 4000);
+        }
+
+        /**
+         * Sécurisation basique HTML pour les prénoms saisis
+         */
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialisation au chargement de la page
+        window.onload = function() {
+            renderBaremeTable();
+            renderRoutesUI();
+            updateSummariesAndFinalTable();
+        };
+    </script>
+</body>
+</html>
